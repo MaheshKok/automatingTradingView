@@ -422,10 +422,11 @@ class Script:
         return final_output
 
     def evaluate_best_results(self):
+        datetime_format = "%d-%m-%Y_%H_%M_%S_%f"
         if not self.deep_history:
             mouse = ActionChains(self.driver)
             with xlsxwriter.Workbook(
-                f"{os.getcwd()}/output/{datetime.now()}_{self.chart}-{self.pyramiding_start}-{self.pyramiding_end}.xlsx",
+                f"{os.getcwd()}/output/{datetime.utcnow().strftime(datetime_format)}_{self.chart}-{self.pyramiding_start}-{self.pyramiding_end}.xlsx",
                 {"constant_memory": True, "strings_to_numbers": True},
             ) as workbook:
                 for pyramiding in range(self.pyramiding_start, self.pyramiding_end):
@@ -784,7 +785,7 @@ class Script:
                     f"{self.pyramiding_start}-{self.pyramiding_end} selected: {time_frame_start} time frame"
                 )
                 with xlsxwriter.Workbook(
-                    f"{os.getcwd()}/output/{str(datetime.now()).replace(':', '')}_{self.chart}-TF-{time_frame_start}-{self.pyramiding_start}-{self.pyramiding_end}.xlsx",
+                    f"{os.getcwd()}/output/{str(datetime.utcnow().strftime(datetime_format)).replace(':', '')}_{self.chart}-TF-{time_frame_start}-{self.pyramiding_start}-{self.pyramiding_end}.xlsx",
                     {"constant_memory": True, "strings_to_numbers": True},
                 ) as workbook:
                     for pyramiding in range(self.pyramiding_start, self.pyramiding_end):
