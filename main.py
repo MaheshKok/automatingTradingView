@@ -422,7 +422,7 @@ class Script:
         return final_output
 
     def evaluate_best_results(self):
-        datetime_format = "%d-%m-%Y_%H_%M_%S_%f"
+        datetime_format = "%Y_%d-%m_%H_%M_%S_%f"
         if not self.deep_history:
             mouse = ActionChains(self.driver)
             with xlsxwriter.Workbook(
