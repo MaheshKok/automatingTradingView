@@ -175,7 +175,7 @@ class Script:
             "chrome://settings/clearBrowserData"
         )  # Open your chrome settings.
         self.perform_actions(
-            Keys.TAB * 2 + Keys.DOWN * 5 + Keys.TAB * 5 + Keys.ENTER,
+            Keys.TAB * 4 + Keys.DOWN * 5 + Keys.TAB * 5 + Keys.ENTER,
         )  # Tab to the time select and key down to say "All Time" then go to the Confirm button and press Enter
         sleep(2)
         self.driver.close()  # Close that window
@@ -254,12 +254,18 @@ class Script:
         sleep(3)
 
     def get_strategy_performance(self):
-        return [
-            self.get_element(
+        result = []
+        for index in range(1, 8):
+            value = self.get_element(
                 f"//div[@class='container-b1pZpka9']/div[{index}]/div[2]/div[1]", ele_name="report data"
-            ).text.replace(" ", "")
-            for index in range(1, 8)
-        ]
+            ).text
+            if '−' in value:
+                value = value.replace('−', '-')
+            if "INR" in value:
+                result.append("".join(value.split()[:-1]))
+            else:
+                result.append(value)
+        return result
 
         # final_data = []
         # for data_index in range(1, 8):
@@ -785,7 +791,7 @@ class Script:
                     f"{self.pyramiding_start}-{self.pyramiding_end} selected: {time_frame_start} time frame"
                 )
                 with xlsxwriter.Workbook(
-                    f"{os.getcwd()}/output/{str(datetime.utcnow().strftime(datetime_format)).replace(':', '')}_{self.chart}-TF-{time_frame_start}-{self.pyramiding_start}-{self.pyramiding_end}.xlsx",
+                    f"{os.getcwd()}/output/{str(datetime.utcnow().strftime(datetime_format)).replace(':', '')}_{self.chart}-TF-{time_frame_start}-{self.pyramiding_start}-{self.pyramiding_end-1}.xlsx",
                     {"constant_memory": True, "strings_to_numbers": True},
                 ) as workbook:
                     for pyramiding in range(self.pyramiding_start, self.pyramiding_end):
@@ -845,7 +851,7 @@ class Script:
                                         attempt = 0
                                         sleep(1)
 
-                                        if _iter == 5:
+                                        if _iter == 2:
                                             self.delete_cache()
                                             self.driver.refresh()
                                             try:
@@ -887,9 +893,11 @@ class Script:
                                     else:
                                         attempt += 1
 
+                            print("output to write to excel: ", output)
                             sorted_output = sorted(
                                 output, key=lambda x: float(x[2]), reverse=True
                             )
+                            print("sorted output to write to excel: ", sorted_output)
                             sorted_output.insert(
                                 0,
                                 [
@@ -907,6 +915,7 @@ class Script:
                             for row, inner_list in enumerate(sorted_output):
                                 for col_index, data in enumerate(inner_list):
                                     worksheet.write(row, col_index, data)
+                            print("data written to excel")
 
                         except Exception as e:
                             final_output = self.read_strategy_output_performance(output)
@@ -1009,7 +1018,7 @@ if __name__ == "__main__":
 
     nifty_kwargs = {
         "step_size_start": 6,
-        "step_size_end": 100,
+        "step_size_end": 80,
         "chart": "NIFTY1!",
         "commission": 160,
         "slippage": 125,
@@ -1017,14 +1026,14 @@ if __name__ == "__main__":
 
     bank_nifty_kwargs = {
         "step_size_start": 16,
-        "step_size_end": 100,
+        "step_size_end": 22,
         "chart": "BANKNIFTY1!",
         "commission": 160,
         "slippage": 250,
     }
-    no_of_threads = 5
+    no_of_threads = 1
     pyramiding_start = 1
-    pyramiding_end = 21
+    pyramiding_end = 7
 
     pyramiding_segments = list(
         range(
@@ -1037,7 +1046,7 @@ if __name__ == "__main__":
     for thread in range(no_of_threads):
         new_kwargs = {
             **kwargs,
-            **nifty_kwargs,
+            **bank_nifty_kwargs,
             "pyramiding_start": pyramiding_segments[thread],
             "pyramiding_end": pyramiding_segments[thread + 1]
             if thread != no_of_threads - 1
