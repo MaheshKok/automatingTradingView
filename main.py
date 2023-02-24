@@ -71,18 +71,18 @@ def read_strategy_output_performance(output):
 
 class Script:
     def __init__(
-            self,
-            pyramiding_start,
-            pyramiding_end,
-            chart,
-            deep_history,
-            step_size_start,
-            step_size_end,
-            time_frame_start,
-            time_frame_end,
-            step_jump,
-            commission,
-            slippage,
+        self,
+        pyramiding_start,
+        pyramiding_end,
+        chart,
+        deep_history,
+        step_size_start,
+        step_size_end,
+        time_frame_start,
+        time_frame_end,
+        step_jump,
+        commission,
+        slippage,
     ):
 
         self.driver = webdriver.Chrome(
@@ -111,7 +111,7 @@ class Script:
         print(f"{self.pyramiding_start}-{self.pyramiding_end} open weblink")
 
     def get_element(
-            self, element_locator, locator_identifier=LOCATORS.XPATH, ele_name=""
+        self, element_locator, locator_identifier=LOCATORS.XPATH, ele_name=""
     ):
         retry = 1
         element = None
@@ -165,17 +165,20 @@ class Script:
                 break
 
     def click_element(
-            self, element_locator, locator_identifier=LOCATORS.XPATH, ele_name=""
+        self, element_locator, locator_identifier=LOCATORS.XPATH, ele_name=""
     ):
         if isinstance(element_locator, str):
             print(
                 f"{self.pyramiding_start}-{self.pyramiding_end} clicking {ele_name or element_locator}"
             )
-            self.click_element(self.get_element(
-                element_locator,
-                locator_identifier=locator_identifier,
+            self.click_element(
+                self.get_element(
+                    element_locator,
+                    locator_identifier=locator_identifier,
+                    ele_name=ele_name,
+                ),
                 ele_name=ele_name,
-            ), ele_name=ele_name)
+            )
             print(
                 f"{self.pyramiding_start}-{self.pyramiding_end} clicked {ele_name or element_locator}"
             )
@@ -431,8 +434,8 @@ class Script:
             self.select_time_frame(time_frame_start)
 
             with xlsxwriter.Workbook(
-                    f"{os.getcwd()}/output/{str(datetime.utcnow().strftime(datetime_format)).replace(':', '')}_{self.chart}-TF-{time_frame_start}-{self.pyramiding_start}-{self.pyramiding_end - 1}.xlsx",
-                    {"constant_memory": True, "strings_to_numbers": True},
+                f"{os.getcwd()}/output/{str(datetime.utcnow().strftime(datetime_format)).replace(':', '')}_{self.chart}-TF-{time_frame_start}-{self.pyramiding_start}-{self.pyramiding_end - 1}.xlsx",
+                {"constant_memory": True, "strings_to_numbers": True},
             ) as workbook:
                 for pyramiding in range(self.pyramiding_start, self.pyramiding_end):
                     worksheet = workbook.add_worksheet(f"pyramiding_{pyramiding}")
