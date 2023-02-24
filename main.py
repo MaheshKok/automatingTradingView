@@ -127,10 +127,7 @@ class Script:
                     element = self.driver.find_element_by_link_text(element_locator)
                 return element
             except Exception as e:
-                try:
-                    self.driver.find_element_by_xpath("//span[text()='Connect']").click()
-                except:
-                    pass
+                self.click_connect_if_required()
                 if ele_name:
                     print(
                         f"{self.pyramiding_start}-{self.pyramiding_end} attempt: {retry} accessing element: {ele_name}"
@@ -195,10 +192,7 @@ class Script:
                     )
                     break
                 except:
-                    try:
-                        self.driver.find_element_by_xpath("//span[text()='Connect']").click()
-                    except:
-                        pass
+                    self.click_connect_if_required()
                     sleep(1)
                     retry += 1
             else:
@@ -277,10 +271,7 @@ class Script:
         self.send_keys("//input[@type='search']", self.chart)
         print(f"{self.pyramiding_start}-{self.pyramiding_end} Entered: {self.chart}")
         sleep(1)
-        try:
-            self.driver.find_element_by_xpath("//span[text()='Connect']").click()
-        except:
-            pass
+        self.click_connect_if_required()
         self.send_keys("//input[@type='search']", Keys.RETURN)
         print(
             f"{self.pyramiding_start}-{self.pyramiding_end} Hit Entered on select chart"
@@ -425,6 +416,13 @@ class Script:
         sleep(1)
         return self.get_strategy_performance()
 
+    def click_connect_if_required(self):
+        try:
+            self.click_element("//button[text()='Connect']", ele_name="Connect")
+            sleep(1)
+        except Exception as e:
+            pass
+
     def evaluate_best_results(self):
         datetime_format = "%Y_%d-%m_%H_%M_%S_%f"
 
@@ -477,6 +475,7 @@ class Script:
                                     f"{self.pyramiding_start}-{self.pyramiding_end} exception occurred on strategy settings screen",
                                     e,
                                 )
+                                self.click_connect_if_required()
                                 if attempt == 5:
                                     step_size += self.step_jump
                                     attempt = 0
