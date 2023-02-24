@@ -127,6 +127,10 @@ class Script:
                     element = self.driver.find_element_by_link_text(element_locator)
                 return element
             except Exception as e:
+                try:
+                    self.driver.find_element_by_xpath("//span[text()='Connect']").click()
+                except:
+                    pass
                 if ele_name:
                     print(
                         f"{self.pyramiding_start}-{self.pyramiding_end} attempt: {retry} accessing element: {ele_name}"
@@ -170,11 +174,11 @@ class Script:
             print(
                 f"{self.pyramiding_start}-{self.pyramiding_end} clicking {ele_name or element_locator}"
             )
-            self.get_element(
+            self.click_element(self.get_element(
                 element_locator,
                 locator_identifier=locator_identifier,
                 ele_name=ele_name,
-            ).click()
+            ), ele_name=ele_name)
             print(
                 f"{self.pyramiding_start}-{self.pyramiding_end} clicked {ele_name or element_locator}"
             )
@@ -191,8 +195,12 @@ class Script:
                     )
                     break
                 except:
-                    retry += 1
+                    try:
+                        self.driver.find_element_by_xpath("//span[text()='Connect']").click()
+                    except:
+                        pass
                     sleep(1)
+                    retry += 1
             else:
                 print(
                     f"{self.pyramiding_start}-{self.pyramiding_end} unable to click: {element_locator}"
@@ -269,6 +277,10 @@ class Script:
         self.send_keys("//input[@type='search']", self.chart)
         print(f"{self.pyramiding_start}-{self.pyramiding_end} Entered: {self.chart}")
         sleep(1)
+        try:
+            self.driver.find_element_by_xpath("//span[text()='Connect']").click()
+        except:
+            pass
         self.send_keys("//input[@type='search']", Keys.RETURN)
         print(
             f"{self.pyramiding_start}-{self.pyramiding_end} Hit Entered on select chart"
@@ -621,14 +633,14 @@ if __name__ == "__main__":
 
     bank_nifty_kwargs = {
         "step_size_start": 16,
-        "step_size_end": 22,
+        "step_size_end": 100,
         "chart": "BANKNIFTY1!",
         "commission": 160,
         "slippage": 250,
     }
-    no_of_threads = 1
+    no_of_threads = 5
     pyramiding_start = 1
-    pyramiding_end = 7
+    pyramiding_end = 100
 
     pyramiding_segments = list(
         range(
