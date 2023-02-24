@@ -23,20 +23,66 @@ class LOCATORS:
     LINK_TEXT = "link_text"
 
 
+def delete_existing_value_and_enter_new_value(ele, value):
+    for _ in range(4):
+        ele.send_keys(Keys.BACKSPACE)
+        sleep(0.1)
+    ele.send_keys(value)
+    ele.send_keys(Keys.ENTER)
+
+
+def read_strategy_output_performance(output):
+    final_output = []
+    for loop in range(len(output[0])):
+        profit = sum(float(inner_list[loop][2]) for inner_list in output)
+        trades = sum(float(inner_list[loop][3]) for inner_list in output)
+        profit_percent = sum(
+            float(inner_list[loop][4].split()[0]) for inner_list in output
+        ) / len(output)
+
+        profit_factor = sum(float(inner_list[loop][5]) for inner_list in output) / len(
+            output
+        )
+
+        draw_dwn = max(float(inner_list[loop][6]) for inner_list in output)
+        average_trade = sum(float(inner_list[loop][7]) for inner_list in output) / len(
+            output
+        )
+
+        average_bars = sum(float(inner_list[loop][8]) for inner_list in output) / len(
+            output
+        )
+
+        final_output.append(
+            [
+                output[0][loop][0],
+                output[0][loop][1],
+                profit,
+                trades,
+                profit_percent,
+                profit_factor,
+                draw_dwn,
+                average_trade,
+                average_bars,
+            ]
+        )
+    return final_output
+
+
 class Script:
     def __init__(
-        self,
-        pyramiding_start,
-        pyramiding_end,
-        chart,
-        deep_history,
-        step_size_start,
-        step_size_end,
-        time_frame_start,
-        time_frame_end,
-        step_jump,
-        commission,
-        slippage,
+            self,
+            pyramiding_start,
+            pyramiding_end,
+            chart,
+            deep_history,
+            step_size_start,
+            step_size_end,
+            time_frame_start,
+            time_frame_end,
+            step_jump,
+            commission,
+            slippage,
     ):
 
         self.driver = webdriver.Chrome(
@@ -65,7 +111,7 @@ class Script:
         print(f"{self.pyramiding_start}-{self.pyramiding_end} open weblink")
 
     def get_element(
-        self, element_locator, locator_identifier=LOCATORS.XPATH, ele_name=""
+            self, element_locator, locator_identifier=LOCATORS.XPATH, ele_name=""
     ):
         retry = 1
         element = None
@@ -98,7 +144,8 @@ class Script:
             try:
                 if self.deep_history:
                     self.driver.find_element(
-                        value="//div[@class='backtesting deep-history']//div[@role='progressbar']", by=By.XPATH
+                        value="//div[@class='backtesting deep-history']//div[@role='progressbar']",
+                        by=By.XPATH,
                     )
                 else:
                     self.driver.find_element_by_class_name(
@@ -117,7 +164,7 @@ class Script:
                 break
 
     def click_element(
-        self, element_locator, locator_identifier=LOCATORS.XPATH, ele_name=""
+            self, element_locator, locator_identifier=LOCATORS.XPATH, ele_name=""
     ):
         if isinstance(element_locator, str):
             print(
@@ -217,31 +264,6 @@ class Script:
     def close_driver(self):
         self.driver.quit()
 
-    def initiate_script(self):
-        # create directory range_filter
-        # create yearwise folder
-
-        for sampling_period in range(50):
-            workbook = xlsxwriter.Workbook(f"output/{sampling_period}.xlsx")
-            # create excelsheet and set its name as per sampling period
-
-            range_multiplier_numbers = [x * 0.1 for x in range(1, 31)]
-            for range_multiplier in range_multiplier_numbers:
-                worksheet = workbook.add_worksheet(f"sheet_{range_multiplier}"[:9])
-                # create sheet based on constant ranging from 0.1 to 20 and set its name as per constant value
-                row = 0
-                column = 0
-                for time_frame in range(1, 120):
-                    for data in range(10):
-                        worksheet.write(row, column, data)
-                        column += 1
-                    column = 0
-                    row += 1
-                    # set time_frame
-                    # extract data and dump it to sheet
-
-            workbook.close()
-
     def select_chart(self):
         self.click_element("//button[@aria-label='Search']")
         self.send_keys("//input[@type='search']", self.chart)
@@ -257,41 +279,18 @@ class Script:
         result = []
         for index in range(1, 8):
             value = self.get_element(
-                f"//div[@class='container-b1pZpka9']/div[{index}]/div[2]/div[1]", ele_name="report data"
+                f"//div[@class='container-b1pZpka9']/div[{index}]/div[2]/div[1]",
+                ele_name="report data",
             ).text
-            if '−' in value:
-                value = value.replace('−', '-')
+            if "−" in value:
+                value = value.replace("−", "-")
             if "INR" in value:
                 result.append("".join(value.split()[:-1]))
             else:
                 result.append(value)
         return result
 
-        # final_data = []
-        # for data_index in range(1, 8):
-        #     ele_xpath = f"//div[@class='report-data']/div[1]/div[{data_index}]/div[2]/div[1]"
-        #     if data_index != 5:
-        #         data = self.driver.find_element_by_xpath(ele_xpath).text
-        #     else:
-        #         data = self.driver.find_element_by_xpath(f"{ele_xpath}/span").text
-        #     final_data.append(data)
-        #
-        # return final_data
-
-    def delete_existing_value_and_enter_new_value(self, ele, value):
-        for _ in range(4):
-            ele.send_keys(Keys.BACKSPACE)
-            sleep(0.1)
-        ele.send_keys(value)
-        ele.send_keys(Keys.ENTER)
-
     def one_time_setup(self, pyramiding, time_frame):
-        # if (
-        #     time_frame
-        #     not in self.get_element(
-        #         "//div[@id='header-toolbar-intervals']/div/div/div"
-        #     ).text
-        # ):
         mouse = ActionChains(self.driver)
         mouse.send_keys(time_frame).send_keys(Keys.ENTER)
         sleep(0.5)
@@ -332,27 +331,23 @@ class Script:
             )
 
         # Code for step size, and we rely on every candle hence its not used at the moment
-        self.click_element(
-            "//div[@class='backtesting deep-history']/div[1]/div[1]/div[1]/div[2]/button[1]/span[1]",
-            ele_name="Tester Area strategy settings icon",
-        )
-        sleep(1)
+        self.click_strategy_settings_icon()
         # enter pyramiding value
         self.click_element("//div[@data-value='properties']")
         pyramiding_ele = self.get_element(
             "//div[@class='content-mTbR5jYu']/div[8]//input"
         )
-        self.delete_existing_value_and_enter_new_value(pyramiding_ele, pyramiding)
+        delete_existing_value_and_enter_new_value(pyramiding_ele, pyramiding)
 
         commission_ele = self.get_element(
             "//div[@class='content-mTbR5jYu']/div[11]//input"
         )
-        self.delete_existing_value_and_enter_new_value(commission_ele, self.commission)
+        delete_existing_value_and_enter_new_value(commission_ele, self.commission)
 
         slippage_ele = self.get_element(
             "//div[@class='content-mTbR5jYu']/div[15]//input"
         )
-        self.delete_existing_value_and_enter_new_value(slippage_ele, self.slippage)
+        delete_existing_value_and_enter_new_value(slippage_ele, self.slippage)
 
         # click inputs
         self.click_element("//div[@data-value='inputs']")
@@ -390,560 +385,160 @@ class Script:
             f"{self.pyramiding_start}-{self.pyramiding_end} select strategy screen closed"
         )
 
-    def read_strategy_output_performance(self, output):
-        final_output = []
-        for loop in range(len(output[0])):
-            profit = sum(float(inner_list[loop][2]) for inner_list in output)
-            trades = sum(float(inner_list[loop][3]) for inner_list in output)
-            profit_percent = sum(
-                float(inner_list[loop][4].split()[0]) for inner_list in output
-            ) / len(output)
+    def enter_step_size(self, step_size):
+        brick_size_ele = self.get_element("(//input[@inputmode='numeric'])[1]")
+        brick_size_ele.click()
+        delete_existing_value_and_enter_new_value(brick_size_ele, step_size)
+        self.click_element("//button[@name='submit']", ele_name="ok button")
+        sleep(1)
 
-            profit_factor = sum(
-                float(inner_list[loop][5]) for inner_list in output
-            ) / len(output)
-
-            draw_dwn = max(float(inner_list[loop][6]) for inner_list in output)
-            average_trade = sum(
-                float(inner_list[loop][7]) for inner_list in output
-            ) / len(output)
-
-            average_bars = sum(
-                float(inner_list[loop][8]) for inner_list in output
-            ) / len(output)
-
-            final_output.append(
-                [
-                    output[0][loop][0],
-                    output[0][loop][1],
-                    profit,
-                    trades,
-                    profit_percent,
-                    profit_factor,
-                    draw_dwn,
-                    average_trade,
-                    average_bars,
-                ]
+    def click_strategy_settings_icon(self):
+        try:
+            self.click_element(
+                "//div[@class='backtesting deep-history']/div[1]/div[1]/div[1]/div[2]/button[1]/span[1]",
+                ele_name="Tester Area strategy settings icon",
             )
-        return final_output
+            sleep(1)
+        except Exception as e:
+            pass
+
+    def click_generate_report_and_get_strategy_results(self):
+        self.click_element(
+            "//span[text()='Generate report']",
+            LOCATORS.XPATH,
+            ele_name="Generate Report",
+        )
+        sleep(3)
+        self.wait_for_date_to_refresh()
+        sleep(1)
+        return self.get_strategy_performance()
 
     def evaluate_best_results(self):
         datetime_format = "%Y_%d-%m_%H_%M_%S_%f"
-        if not self.deep_history:
-            mouse = ActionChains(self.driver)
+
+        time_frame_start = self.time_frame_start
+        while time_frame_start < self.time_frame_end:
+            self.select_time_frame(time_frame_start)
+
             with xlsxwriter.Workbook(
-                f"{os.getcwd()}/output/{datetime.utcnow().strftime(datetime_format)}_{self.chart}-{self.pyramiding_start}-{self.pyramiding_end}.xlsx",
-                {"constant_memory": True, "strings_to_numbers": True},
+                    f"{os.getcwd()}/output/{str(datetime.utcnow().strftime(datetime_format)).replace(':', '')}_{self.chart}-TF-{time_frame_start}-{self.pyramiding_start}-{self.pyramiding_end - 1}.xlsx",
+                    {"constant_memory": True, "strings_to_numbers": True},
             ) as workbook:
                 for pyramiding in range(self.pyramiding_start, self.pyramiding_end):
                     worksheet = workbook.add_worksheet(f"pyramiding_{pyramiding}")
-                    # row = 0
-                    time_frame = 5
-                    while time_frame < 6:
-                        date_range = [
-                            [2021, 5, 1, 2021, 12, 1],
-                            [2021, 12, 1, 2022, 10, 15],
-                        ]
-                        output = [[] for _ in range(len(date_range))]
-                        try:
-                            # if time_frame < 10:
-                            #     mouse.move_to_element(
-                            #         self.get_element("(//div[@class='chart-gui-wrapper'])[1]")
-                            #     ).send_keys(1).send_keys(Keys.BACKSPACE).send_keys(
-                            #         time_frame
-                            #     ).send_keys(
-                            #         Keys.ENTER
-                            #     ).perform()
-                            # elif 10 <= time_frame <= 99:
-                            #     mouse.move_to_element(
-                            #         self.get_element("(//div[@class='chart-gui-wrapper'])[1]")
-                            #     ).send_keys(1).send_keys(Keys.BACKSPACE).send_keys(
-                            #         Keys.BACKSPACE
-                            #     ).send_keys(
-                            #         time_frame
-                            #     ).send_keys(
-                            #         Keys.ENTER
-                            #     ).perform()
-                            # else:
-                            #     mouse.move_to_element(
-                            #         self.get_element("(//div[@class='chart-gui-wrapper'])[1]")
-                            #     ).send_keys(1).send_keys(Keys.BACKSPACE).send_keys(
-                            #         Keys.BACKSPACE
-                            #     ).send_keys(
-                            #         Keys.BACKSPACE
-                            #     ).send_keys(
-                            #         time_frame
-                            #     ).send_keys(
-                            #         Keys.ENTER
-                            #     ).perform()
-                            # sleep(10)
-                            # strategy_on_chart_ele = self.get_element(
-                            #     f"//div[text()='{self.strategy}']"
-                            # )
-
-                            # self.click_element(strategy_on_chart_ele)
-
-                            # chart_gui_ele = self.get_element("(//div[@class='chart-gui-wrapper'])[1]")
-                            # mouse.move_to_element(chart_gui_ele).click().perform()
-                            # sleep(0.2)
-                            # self.send_keys("(//div[@class='chart-gui-wrapper'])[1]", time_frame)
-                            # sleep(0.3)
-                            # self.send_keys("(//div[@class='chart-gui-wrapper'])[1]", Keys.RETURN)
-                            # sleep(10)
-                            # print(f"Time Frame: {time_frame} selected")
-
-                            # self.click_element(strategy_on_chart_ele, ele_name="strategy_on_chart")
-                            # sleep(0.2)
-                            # self.click_element("//div[@data-name='legend-settings-action']", ele_name="settings icon")
-
-                            self.click_element(
-                                # "//div[@class='backtesting-head-wrapper']/div[2]/div",
-                                "//div[@class='backtesting deep-history']/div[1]/div[1]/div[1]/div[2]/button[1]/span[1]",
-                                ele_name="Tester Area strategy settings icon",
-                            )
-                            # mouse.move_to_element(self.get_element("//div[@data-name='legend-settings-action']")).click()
-                            # sleep(0.2)
-                            # mouse.double_click(self.get_element("//div[@data-name='legend-settings-action']")).perform()
-                            # print("clicked strategy setting icons")
-                            sleep(1)
-
-                            # # self.click_element("icon-button js-backtesting-open-format-dialog apply-common-tooltip", LOCATORS.CLASS_NAME, ele_name="strategy setting icon")
-                            # mini_container_ele = self.get_element("report-minichart-container", LOCATORS.CLASS_NAME)
-                            # mouse.move_to_element(mini_container_ele).context_click(mini_container_ele).perform()
-                            # sleep(0.2)
-                            # self.driver.execute_script("arguments[0].click();", self.get_element("//span[text()='Strategy Properties…']"))
-                            # print("clicked strategy properties")
-                            # self.click_element("//span[text()='Strategy Properties…']", ele_name="Strategy Properties")
-                            # sleep(0.5)
-                            # self.click_element(f"//div[text()='{self.strategy}']", ele_name="strategy on chart")
-                            # sleep(1)
-                            #
-                            # print("opening strategy's setting screen")
-                            # mouse.double_click(self.get_element(f"//div[text()='{self.strategy}']"))
-                            # print("opened strategy's setting screen")
-                            # # print("clicking strategy's setting icon ")
-                            # # self.driver.execute_script("arguments[0].click();", self.get_element("//div[@data-name='legend-settings-action']"))
-                            # # print("clicked strategy's setting icon")
-                            # self.click_element("//div[@data-name='legend-settings-action']", ele_name="strategy's setting icon")
-
-                            for inner_list_index, date in enumerate(date_range):
-                                step_size = 5
-                                attempt = 1
-
-                                # enter pyramiding value
-                                self.click_element("//div[@data-value='properties']")
-                                pyramiding_ele = self.get_element(
-                                    "//div[@class='cell-ByXdMGQj'][4]//input"
+                    output = []
+                    try:
+                        step_size = self.step_size_start
+                        attempt = 1
+                        self.one_time_setup(pyramiding, time_frame_start)
+                        _iter = 1
+                        while step_size <= self.step_size_end:
+                            try:
+                                self.click_strategy_settings_icon()
+                                self.enter_step_size(step_size)
+                                strategy_results = (
+                                    self.click_generate_report_and_get_strategy_results()
                                 )
-                                for _ in range(4):
-                                    pyramiding_ele.send_keys(Keys.BACKSPACE)
-                                    sleep(0.1)
-                                pyramiding_ele.send_keys(pyramiding)
-                                pyramiding_ele.send_keys(Keys.ENTER)
-
-                                # click inputs
-                                self.click_element("//div[@data-value='inputs']")
-                                sleep(0.2)
-
-                                date_input_eles = self.driver.find_elements_by_xpath(
-                                    "//input[@class='input-uGWFLwEy with-end-slot-uGWFLwEy']"
+                                strategy_results = [
+                                    time_frame_start,
+                                    step_size,
+                                    *strategy_results,
+                                ]
+                                print(
+                                    f"{self.pyramiding_start} - {self.pyramiding_end} Pyramiding: {pyramiding}, Brick Size: {step_size}, strategy details: {strategy_results}"
                                 )
 
-                                # for setting open mv and close mv
-                                mv_list = [11, 12]
-                                for mv_index, mv in enumerate(mv_list):
-                                    for outer_i in range(4):
-                                        date_input_eles[mv_index + 3].send_keys(
-                                            Keys.BACKSPACE
-                                        )
-                                        sleep(0.1)
-                                    date_input_eles[mv_index + 3].send_keys(mv)
-                                    sleep(0.1)
+                                output.append(strategy_results)
+                                step_size += self.step_jump
+                                attempt = 0
+                                sleep(1)
 
-                                # set date range
-                                for index, value in enumerate(date):
-                                    for _ in range(4):
-                                        date_input_eles[index + 5].send_keys(
-                                            Keys.BACKSPACE
-                                        )
-                                        sleep(0.1)
-                                    date_input_eles[index + 5].send_keys(value)
-                                    date_input_eles[index + 5].send_keys(Keys.ENTER)
-                                    sleep(0.1)
+                                if _iter == 5:
+                                    self.delete_cache_and_login()
+                                    self.one_time_setup(pyramiding, time_frame_start)
+                                    _iter = 1
+                                else:
+                                    _iter += 1
 
-                                while step_size <= 60:
-                                    try:
-                                        brick_size_ele = self.get_element(
-                                            "(//input[@inputmode='numeric'])[1]"
-                                        )
-                                        brick_size_ele.click()
-                                        brick_size_ele.send_keys(Keys.BACKSPACE)
-                                        sleep(0.1)
-                                        brick_size_ele.send_keys(Keys.BACKSPACE)
-                                        sleep(0.1)
-                                        brick_size_ele.send_keys(Keys.BACKSPACE)
-                                        sleep(0.1)
-                                        self.get_element(
-                                            "(//input[@inputmode='numeric'])[1]"
-                                        ).send_keys(step_size)
-                                        sleep(0.1)
-                                        self.get_element(
-                                            "(//input[@inputmode='numeric'])[1]"
-                                        ).send_keys(Keys.RETURN)
-                                        sleep(1)
-                                        self.wait_for_date_to_refresh()
-                                        sleep(1)
-                                        strategy_output_details = [
-                                            time_frame,
-                                            step_size,
-                                            *self.get_strategy_performance(),
-                                        ]
-                                        # for col_index, d in enumerate(final_data):
-                                        #     worksheet.write(row, col_index, d)
-                                        # row += 1
-                                        if output[inner_list_index]:
-                                            max_time_to_wait = 1
-                                            while max_time_to_wait <= 15:
-                                                if (
-                                                    strategy_output_details[2]
-                                                    == output[inner_list_index][-1][2]
-                                                ):
-                                                    self.wait_for_date_to_refresh()
-                                                    strategy_output_details = [
-                                                        time_frame,
-                                                        step_size,
-                                                        *self.get_strategy_performance(),
-                                                    ]
-                                                    max_time_to_wait += 1
-                                                    sleep(1)
-                                                else:
-                                                    break
-
-                                        print(f"{strategy_output_details}")
-                                        output[inner_list_index].append(
-                                            strategy_output_details
-                                        )
-                                        step_size += 1
-                                        attempt = 0
-                                    except Exception as e:
-                                        print(
-                                            "exception occurred on strategy settings screen",
-                                            e,
-                                        )
-                                        if attempt == 5:
-                                            step_size += 1
-                                            attempt = 0
-                                        else:
-                                            attempt += 1
-
-                            final_output = []
-                            for loop in range(len(output[0])):
-                                profit = sum(
-                                    [
-                                        float(inner_list[loop][2])
-                                        for inner_list in output
-                                    ]
+                            except Exception as e:
+                                print(
+                                    f"{self.pyramiding_start}-{self.pyramiding_end} exception occurred on strategy settings screen",
+                                    e,
                                 )
-                                trades = sum(
-                                    [
-                                        float(inner_list[loop][3])
-                                        for inner_list in output
-                                    ]
-                                )
-                                profit_percent = sum(
-                                    [
-                                        float(inner_list[loop][4].split()[0])
-                                        for inner_list in output
-                                    ]
-                                ) / len(output)
-                                profit_factor = sum(
-                                    [
-                                        float(inner_list[loop][5])
-                                        for inner_list in output
-                                    ]
-                                ) / len(output)
-                                draw_dwn = max(
-                                    [
-                                        float(inner_list[loop][6])
-                                        for inner_list in output
-                                    ]
-                                )
-                                average_trade = sum(
-                                    [
-                                        float(inner_list[loop][7])
-                                        for inner_list in output
-                                    ]
-                                ) / len(output)
-                                average_bars = sum(
-                                    [
-                                        float(inner_list[loop][8])
-                                        for inner_list in output
-                                    ]
-                                ) / len(output)
-                                final_output.append(
-                                    [
-                                        output[0][loop][0],
-                                        output[0][loop][1],
-                                        profit,
-                                        trades,
-                                        profit_percent,
-                                        profit_factor,
-                                        draw_dwn,
-                                        average_trade,
-                                        average_bars,
-                                    ]
-                                )
+                                if attempt == 5:
+                                    step_size += self.step_jump
+                                    attempt = 0
+                                else:
+                                    attempt += 1
 
-                            for row, inner_list in enumerate(final_output):
+                        sorted_output = sorted(
+                            output, key=lambda x: float(x[2]), reverse=True
+                        )
+                        sorted_output.insert(
+                            0,
+                            [
+                                "time_frame",
+                                "step_size",
+                                "profit",
+                                "total_trades",
+                                "profit %",
+                                "profit factor",
+                                "max dradowm",
+                                "avg trade",
+                                "avg bars",
+                            ],
+                        )
+                        self.write_to_excel_sheet(sorted_output, worksheet)
+
+                    except Exception as e:
+                        final_output = read_strategy_output_performance(output)
+                        for row, inner_list in enumerate(final_output):
+                            try:
                                 for col_index, data in enumerate(inner_list):
-                                    worksheet.write(row, col_index, data)
-
-                            self.click_element("//span[@data-name='close']")
-                            print(
-                                f"{self.pyramiding_start}-{self.pyramiding_end} edit strategy screen closed"
-                            )
-                            sleep(0.2)
-                            time_frame += 1
-                        except Exception as e:
-
-                            final_output = []
-                            for loop in range(len(output[0])):
-                                profit = sum(
-                                    [
-                                        float(inner_list[loop][2])
-                                        for inner_list in output
-                                    ]
-                                )
-                                trades = sum(
-                                    [
-                                        float(inner_list[loop][3])
-                                        for inner_list in output
-                                    ]
-                                )
-                                profit_percent = sum(
-                                    [
-                                        float(inner_list[loop][4].split()[0])
-                                        for inner_list in output
-                                    ]
-                                ) / len(output)
-                                profit_factor = sum(
-                                    [
-                                        float(inner_list[loop][5])
-                                        for inner_list in output
-                                    ]
-                                ) / len(output)
-                                draw_dwn = max(
-                                    [
-                                        float(inner_list[loop][6])
-                                        for inner_list in output
-                                    ]
-                                )
-                                average_trade = sum(
-                                    [
-                                        float(inner_list[loop][7])
-                                        for inner_list in output
-                                    ]
-                                ) / len(output)
-                                average_bars = sum(
-                                    [
-                                        float(inner_list[loop][8])
-                                        for inner_list in output
-                                    ]
-                                ) / len(output)
-                                final_output.append(
-                                    [
-                                        output[0][loop][0],
-                                        output[0][loop][1],
-                                        profit,
-                                        trades,
-                                        profit_percent,
-                                        profit_factor,
-                                        draw_dwn,
-                                        average_trade,
-                                        average_bars,
-                                    ]
-                                )
-
-                            for row, inner_list in enumerate(final_output):
-                                try:
-                                    for col_index, data in enumerate(inner_list):
-                                        try:
-                                            worksheet.write_row(row, col_index, data)
-                                        except:
-                                            pass
-                                except:
-                                    pass
-
-                            print(
-                                f"{self.pyramiding_start}-{self.pyramiding_end} Exception occurred: e",
-                                e,
-                            )
-                            time_frame += 1
-        else:
-            time_frame_start = self.time_frame_start
-            while time_frame_start < self.time_frame_end:
-                mouse = ActionChains(self.driver)
-                mouse.send_keys(time_frame_start).send_keys(Keys.ENTER)
-                sleep(0.1)
-                mouse.perform()
-                sleep(1)
-                print(
-                    f"{self.pyramiding_start}-{self.pyramiding_end} selected: {time_frame_start} time frame"
-                )
-                with xlsxwriter.Workbook(
-                    f"{os.getcwd()}/output/{str(datetime.utcnow().strftime(datetime_format)).replace(':', '')}_{self.chart}-TF-{time_frame_start}-{self.pyramiding_start}-{self.pyramiding_end-1}.xlsx",
-                    {"constant_memory": True, "strings_to_numbers": True},
-                ) as workbook:
-                    for pyramiding in range(self.pyramiding_start, self.pyramiding_end):
-                        worksheet = workbook.add_worksheet(f"pyramiding_{pyramiding}")
-                        output = []
-                        try:
-                            step_size = self.step_size_start
-                            attempt = 1
-                            self.one_time_setup(pyramiding, time_frame_start)
-                            _iter = 1
-                            while step_size <= self.step_size_end:
-                                try:
-                                    self.click_element(
-                                        # "//div[@class='backtesting-head-wrapper']/div[2]/div",
-                                        "//div[@class='backtesting deep-history']/div[1]/div[1]/div[1]/div[2]/button[1]/span[1]",
-                                        ele_name="Tester Area strategy settings icon",
-                                    )
-                                    sleep(1)
-
-                                    brick_size_ele = self.get_element(
-                                        "(//input[@inputmode='numeric'])[1]"
-                                    )
-                                    brick_size_ele.click()
-                                    brick_size_ele.send_keys(Keys.BACKSPACE)
-                                    sleep(0.1)
-                                    brick_size_ele.send_keys(Keys.BACKSPACE)
-                                    sleep(0.1)
-                                    brick_size_ele.send_keys(Keys.BACKSPACE)
-                                    sleep(0.1)
-                                    self.get_element(
-                                        "(//input[@inputmode='numeric'])[1]"
-                                    ).send_keys(step_size)
-                                    sleep(0.1)
-                                    self.click_element(
-                                        "//button[@name='submit']", ele_name="ok button"
-                                    )
-                                    sleep(1)
-                                    self.click_element(
-                                        "//span[text()='Generate report']",
-                                        LOCATORS.XPATH,
-                                        ele_name="Generate Report",
-                                    )
-                                    sleep(3)
-                                    self.wait_for_date_to_refresh()
-                                    sleep(1)
                                     try:
-                                        strategy_output_details = [
-                                            time_frame_start,
-                                            step_size,
-                                            *self.get_strategy_performance(),
-                                        ]
-                                        print(
-                                            f"{self.pyramiding_start} - {self.pyramiding_end} Pyramiding: {pyramiding}, Brick Size: {step_size}, strategy details: {strategy_output_details}"
-                                        )
-                                        output.append(strategy_output_details)
-                                        step_size += self.step_jump
-                                        attempt = 0
-                                        sleep(1)
+                                        worksheet.write_row(row, col_index, data)
+                                    except:
+                                        pass
+                            except:
+                                pass
 
-                                        if _iter == 2:
-                                            self.delete_cache()
-                                            self.driver.refresh()
-                                            try:
-                                                self.driver.switch_to.alert.accept()
-                                            except Exception:
-                                                print("Alert not present")
-                                            sleep(2)
-                                            self.login()
-                                            sleep(5)
-                                            self.one_time_setup(
-                                                pyramiding, time_frame_start
-                                            )
-                                            _iter = 1
-                                        else:
-                                            _iter += 1
-                                    except Exception as e:
-                                        # chrome runs out of memory when trying to access the strategy report
-                                        # hence refresh the page and run from the same loop
-                                        print(
-                                            f"{self.pyramiding_start}-{self.pyramiding_end} Error: {e}"
-                                        )
-                                        print(
-                                            f"{self.pyramiding_start}-{self.pyramiding_end} chrome out of memory"
-                                        )
-                                        self.driver.refresh()
-                                        self.one_time_setup(
-                                            pyramiding, time_frame_start
-                                        )
-                                        continue
+                        print(
+                            f"{self.pyramiding_start}-{self.pyramiding_end} Exception occurred: e",
+                            e,
+                        )
 
-                                except Exception as e:
-                                    print(
-                                        f"{self.pyramiding_start}-{self.pyramiding_end} exception occurred on strategy settings screen",
-                                        e,
-                                    )
-                                    if attempt == 5:
-                                        step_size += self.step_jump
-                                        attempt = 0
-                                    else:
-                                        attempt += 1
+                    self.delete_cache_and_login()
+            time_frame_start = time_frame_start + 1
 
-                            print("output to write to excel: ", output)
-                            sorted_output = sorted(
-                                output, key=lambda x: float(x[2]), reverse=True
-                            )
-                            print("sorted output to write to excel: ", sorted_output)
-                            sorted_output.insert(
-                                0,
-                                [
-                                    "time_frame",
-                                    "step_size",
-                                    "profit",
-                                    "total_trades",
-                                    "profit %",
-                                    "profit factor",
-                                    "max dradowm",
-                                    "avg trade",
-                                    "avg bars",
-                                ],
-                            )
-                            for row, inner_list in enumerate(sorted_output):
-                                for col_index, data in enumerate(inner_list):
-                                    worksheet.write(row, col_index, data)
-                            print("data written to excel")
+    @staticmethod
+    def write_to_excel_sheet(sorted_output, worksheet):
+        for row, inner_list in enumerate(sorted_output):
+            for col_index, data in enumerate(inner_list):
+                worksheet.write(row, col_index, data)
+        print("data written to excel")
 
-                        except Exception as e:
-                            final_output = self.read_strategy_output_performance(output)
-                            for row, inner_list in enumerate(final_output):
-                                try:
-                                    for col_index, data in enumerate(inner_list):
-                                        try:
-                                            worksheet.write_row(row, col_index, data)
-                                        except:
-                                            pass
-                                except:
-                                    pass
+    def select_time_frame(self, time_frame):
+        mouse = ActionChains(self.driver)
+        mouse.send_keys(time_frame)
+        sleep(0.2)
+        mouse.send_keys(Keys.ENTER)
+        sleep(0.2)
+        mouse.perform()
+        sleep(0.5)
+        print(
+            f"{self.pyramiding_start}-{self.pyramiding_end} selected: {time_frame} time frame"
+        )
 
-                            print(
-                                f"{self.pyramiding_start}-{self.pyramiding_end} Exception occurred: e",
-                                e,
-                            )
-
-                        self.delete_cache()
-                        self.driver.refresh()
-                        try:
-                            self.driver.switch_to.alert.accept()
-                        except Exception as e:
-                            print("Alert not present")
-                        sleep(2)
-                        self.login()
-                        sleep(5)
-                time_frame_start = time_frame_start + 1
+    def delete_cache_and_login(self):
+        self.delete_cache()
+        self.driver.refresh()
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            print("Alert not present")
+        sleep(2)
+        self.login()
+        sleep(5)
 
 
 def open_webpage(driver, weblink):
@@ -1060,24 +655,6 @@ if __name__ == "__main__":
         new_kwargs = {}
         thread_list.append(t)
         new_kwargs = {}
-
-    # pyramiding_list = range(step_size_start, step_size_end, no_of_threads)
-    # for pyramiding in pyramiding_list:
-    #     t = threading.Thread(
-    #         target=entire_run, args=(pyramiding, pyramiding + 20, chart, deep_history)
-    #     )
-    #     thread_list.append(t)
-
-    # script = Script()
-    # script.open_weblink()
-    # try:
-    #     script.login()
-    #     script.select_chart()
-    #     script.evaluate_best_results()
-    # except Exception as e:
-    #     print("Exception occurred: ", e)
-    #     script.close_driver()
-    # script.close_driver()
 
     [_thread.start() for _thread in thread_list]
     [_thread.join() for _thread in thread_list]
