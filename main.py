@@ -81,6 +81,10 @@ class Script:
                     element = self.driver.find_element_by_link_text(element_locator)
                 return element
             except Exception as e:
+                try:
+                    self.driver.find_element_by_xpath("//span[text()='Connect']").click()
+                except:
+                    pass
                 if ele_name:
                     print(
                         f"{self.pyramiding_start}-{self.pyramiding_end} attempt: {retry} accessing element: {ele_name}"
@@ -123,11 +127,11 @@ class Script:
             print(
                 f"{self.pyramiding_start}-{self.pyramiding_end} clicking {ele_name or element_locator}"
             )
-            self.get_element(
+            self.click_element(self.get_element(
                 element_locator,
                 locator_identifier=locator_identifier,
                 ele_name=ele_name,
-            ).click()
+            ), ele_name=ele_name)
             print(
                 f"{self.pyramiding_start}-{self.pyramiding_end} clicked {ele_name or element_locator}"
             )
@@ -144,8 +148,12 @@ class Script:
                     )
                     break
                 except:
-                    retry += 1
+                    try:
+                        self.driver.find_element_by_xpath("//span[text()='Connect']").click()
+                    except:
+                        pass
                     sleep(1)
+                    retry += 1
             else:
                 print(
                     f"{self.pyramiding_start}-{self.pyramiding_end} unable to click: {element_locator}"
@@ -247,6 +255,10 @@ class Script:
         self.send_keys("//input[@type='search']", self.chart)
         print(f"{self.pyramiding_start}-{self.pyramiding_end} Entered: {self.chart}")
         sleep(1)
+        try:
+            self.driver.find_element_by_xpath("//span[text()='Connect']").click()
+        except:
+            pass
         self.send_keys("//input[@type='search']", Keys.RETURN)
         print(
             f"{self.pyramiding_start}-{self.pyramiding_end} Hit Entered on select chart"
@@ -426,6 +438,13 @@ class Script:
                 ]
             )
         return final_output
+
+    def enter_step_size(self, step_size):
+        brick_size_ele = self.get_element("(//input[@inputmode='numeric'])[1]")
+        brick_size_ele.click()
+        self.delete_existing_value_and_enter_new_value(brick_size_ele, step_size)
+        self.click_element("//button[@name='submit']", ele_name="ok button")
+        sleep(1)
 
     def evaluate_best_results(self):
         datetime_format = "%Y_%d-%m_%H_%M_%S_%f"
@@ -811,24 +830,27 @@ class Script:
                                     )
                                     sleep(1)
 
-                                    brick_size_ele = self.get_element(
-                                        "(//input[@inputmode='numeric'])[1]"
-                                    )
-                                    brick_size_ele.click()
-                                    brick_size_ele.send_keys(Keys.BACKSPACE)
-                                    sleep(0.1)
-                                    brick_size_ele.send_keys(Keys.BACKSPACE)
-                                    sleep(0.1)
-                                    brick_size_ele.send_keys(Keys.BACKSPACE)
-                                    sleep(0.1)
-                                    self.get_element(
-                                        "(//input[@inputmode='numeric'])[1]"
-                                    ).send_keys(step_size)
-                                    sleep(0.1)
-                                    self.click_element(
-                                        "//button[@name='submit']", ele_name="ok button"
-                                    )
-                                    sleep(1)
+                                    # brick_size_ele = self.get_element(
+                                    #     "(//input[@inputmode='numeric'])[1]"
+                                    # )
+                                    # brick_size_ele.click()
+                                    # brick_size_ele.send_keys(Keys.BACKSPACE)
+                                    # sleep(0.1)
+                                    # brick_size_ele.send_keys(Keys.BACKSPACE)
+                                    # sleep(0.1)
+                                    # brick_size_ele.send_keys(Keys.BACKSPACE)
+                                    # sleep(0.1)
+                                    # self.get_element(
+                                    #     "(//input[@inputmode='numeric'])[1]"
+                                    # ).send_keys(step_size)
+                                    # sleep(0.1)
+                                    # self.click_element(
+                                    #     "//button[@name='submit']", ele_name="ok button"
+                                    # )
+                                    # sleep(1)
+
+                                    self.enter_step_size(step_size)
+
                                     self.click_element(
                                         "//span[text()='Generate report']",
                                         LOCATORS.XPATH,
@@ -851,7 +873,7 @@ class Script:
                                         attempt = 0
                                         sleep(1)
 
-                                        if _iter == 2:
+                                        if _iter == 5:
                                             self.delete_cache()
                                             self.driver.refresh()
                                             try:
@@ -887,6 +909,10 @@ class Script:
                                         f"{self.pyramiding_start}-{self.pyramiding_end} exception occurred on strategy settings screen",
                                         e,
                                     )
+                                    try:
+                                        self.driver.find_element_by_xpath("//span[text()='Connect']").click()
+                                    except:
+                                        pass
                                     if attempt == 5:
                                         step_size += self.step_jump
                                         attempt = 0
@@ -1026,14 +1052,14 @@ if __name__ == "__main__":
 
     bank_nifty_kwargs = {
         "step_size_start": 16,
-        "step_size_end": 22,
+        "step_size_end": 100,
         "chart": "BANKNIFTY1!",
         "commission": 160,
         "slippage": 250,
     }
-    no_of_threads = 1
+    no_of_threads = 5
     pyramiding_start = 1
-    pyramiding_end = 7
+    pyramiding_end = 100
 
     pyramiding_segments = list(
         range(
@@ -1046,7 +1072,7 @@ if __name__ == "__main__":
     for thread in range(no_of_threads):
         new_kwargs = {
             **kwargs,
-            **bank_nifty_kwargs,
+            **nifty_kwargs,
             "pyramiding_start": pyramiding_segments[thread],
             "pyramiding_end": pyramiding_segments[thread + 1]
             if thread != no_of_threads - 1
@@ -1060,24 +1086,6 @@ if __name__ == "__main__":
         new_kwargs = {}
         thread_list.append(t)
         new_kwargs = {}
-
-    # pyramiding_list = range(step_size_start, step_size_end, no_of_threads)
-    # for pyramiding in pyramiding_list:
-    #     t = threading.Thread(
-    #         target=entire_run, args=(pyramiding, pyramiding + 20, chart, deep_history)
-    #     )
-    #     thread_list.append(t)
-
-    # script = Script()
-    # script.open_weblink()
-    # try:
-    #     script.login()
-    #     script.select_chart()
-    #     script.evaluate_best_results()
-    # except Exception as e:
-    #     print("Exception occurred: ", e)
-    #     script.close_driver()
-    # script.close_driver()
 
     [_thread.start() for _thread in thread_list]
     [_thread.join() for _thread in thread_list]
