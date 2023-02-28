@@ -421,7 +421,7 @@ class Script:
 
     def click_connect_if_required(self):
         try:
-            self.click_element("//button[text()='Connect']", ele_name="Connect")
+            self.driver.find_element_by_xpath("//span[text()='Connect']").click()
             sleep(1)
         except Exception as e:
             pass
@@ -655,7 +655,7 @@ if __name__ == "__main__":
     for thread in range(no_of_threads):
         new_kwargs = {
             **kwargs,
-            **bank_nifty_kwargs,
+            **nifty_kwargs,
             "pyramiding_start": pyramiding_segments[thread],
             "pyramiding_end": pyramiding_segments[thread + 1]
             if thread != no_of_threads - 1
